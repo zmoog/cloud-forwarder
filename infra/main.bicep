@@ -24,6 +24,16 @@ param minReplicas int = 1
 @description('Maximum number of replicas')
 param maxReplicas int = 3
 
+@description('Number of partitions per Event Hub')
+@minValue(2)
+@maxValue(32)
+param partitionCount int = 4
+
+@description('Message retention in days')
+@minValue(1)
+@maxValue(7)
+param messageRetentionInDays int = 1
+
 
 
 // ---------- Event Hub Namespace + Hubs ----------
@@ -46,8 +56,8 @@ resource logsHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
   parent: eventHubNamespace
   name: 'logs'
   properties: {
-    partitionCount: 4
-    messageRetentionInDays: 1
+    partitionCount: partitionCount
+    messageRetentionInDays: messageRetentionInDays
   }
 }
 
@@ -60,8 +70,8 @@ resource metricsHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
   parent: eventHubNamespace
   name: 'metrics'
   properties: {
-    partitionCount: 4
-    messageRetentionInDays: 1
+    partitionCount: partitionCount
+    messageRetentionInDays: messageRetentionInDays
   }
 }
 
@@ -74,8 +84,8 @@ resource tracesHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
   parent: eventHubNamespace
   name: 'traces'
   properties: {
-    partitionCount: 4
-    messageRetentionInDays: 1
+    partitionCount: partitionCount
+    messageRetentionInDays: messageRetentionInDays
   }
 }
 

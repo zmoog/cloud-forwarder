@@ -7,7 +7,7 @@ BASE_NAME ?= cloud-forwarder-aca
 RESOURCE_GROUP ?= $(BASE_NAME)-rg
 LOCATION ?= eastus2
 
-.PHONY: build tidy docker-build deploy push logs send-test-event clean
+.PHONY: build tidy docker-build deploy push logs send-test-event clean arm
 
 # ---------- Local ----------
 
@@ -21,6 +21,9 @@ run: build
 	./bin/collector --config config.yaml
 
 # ---------- Infrastructure ----------
+
+arm:
+	az bicep build --file infra/main.bicep --outfile infra/main.json
 
 deploy:
 	az group create --name $(RESOURCE_GROUP) --location $(LOCATION)

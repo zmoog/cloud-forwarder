@@ -2,6 +2,7 @@ name: Check ARM template is up-to-date
 
 on:
   push:
+    branches: [main]
     paths:
       - infra/main.bicep
       - infra/main.json
@@ -20,11 +21,13 @@ jobs:
         run: az bicep install
 
       - name: Rebuild ARM template
-        run: az bicep build --file infra/main.bicep --outfile infra/main.json
+        run: az bicep build --file infra/main.bicep --outfile /tmp/main-rebuilt.json
 
       - name: Fail if main.json is stale
         run: |
-          if ! git diff --exit-code infra/main.json; then
+          committed=$(jq 'del(.metadata._generator)' infra/main.json)
+          rebuilt=$(jq 'del(.metadata._generator)' /tmp/main-rebuilt.json)
+          if [ "$committed" != "$rebuilt" ]; then
             echo "infra/main.json is out of sync with infra/main.bicep."
             echo "Run 'make arm' locally and commit the updated main.json."
             exit 1

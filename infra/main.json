@@ -1,0 +1,311 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.41.2.15936",
+      "templateHash": "14704300545899643247"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Azure region for all resources"
+      }
+    },
+    "baseName": {
+      "type": "string",
+      "defaultValue": "cloud-forwarder-aca",
+      "metadata": {
+        "description": "Base name for all resources"
+      }
+    },
+    "eventHubSku": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Event Hub namespace SKU"
+      }
+    },
+    "containerImage": {
+      "type": "string",
+      "metadata": {
+        "description": "Container image to deploy"
+      }
+    },
+    "elasticsearchOtlpEndpoint": {
+      "type": "string",
+      "metadata": {
+        "description": "Elasticsearch OTLP endpoint"
+      }
+    },
+    "elasticsearchApiKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Elasticsearch API key"
+      }
+    },
+    "minReplicas": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Minimum number of replicas"
+      }
+    },
+    "maxReplicas": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Maximum number of replicas"
+      }
+    },
+    "partitionCount": {
+      "type": "int",
+      "defaultValue": 4,
+      "minValue": 2,
+      "maxValue": 32,
+      "metadata": {
+        "description": "Number of partitions per Event Hub"
+      }
+    },
+    "messageRetentionInDays": {
+      "type": "int",
+      "defaultValue": 1,
+      "minValue": 1,
+      "maxValue": 7,
+      "metadata": {
+        "description": "Message retention in days"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.EventHub/namespaces",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}-ehns', parameters('baseName'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('eventHubSku')]",
+        "tier": "[parameters('eventHubSku')]",
+        "capacity": 1
+      },
+      "properties": {
+        "kafkaEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}', format('{0}-ehns', parameters('baseName')), 'logs')]",
+      "properties": {
+        "partitionCount": "[parameters('partitionCount')]",
+        "messageRetentionInDays": "[parameters('messageRetentionInDays')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}/{2}', format('{0}-ehns', parameters('baseName')), 'logs', 'cloud-forwarder')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', format('{0}-ehns', parameters('baseName')), 'logs')]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}', format('{0}-ehns', parameters('baseName')), 'metrics')]",
+      "properties": {
+        "partitionCount": "[parameters('partitionCount')]",
+        "messageRetentionInDays": "[parameters('messageRetentionInDays')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}/{2}', format('{0}-ehns', parameters('baseName')), 'metrics', 'cloud-forwarder')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', format('{0}-ehns', parameters('baseName')), 'metrics')]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}', format('{0}-ehns', parameters('baseName')), 'traces')]",
+      "properties": {
+        "partitionCount": "[parameters('partitionCount')]",
+        "messageRetentionInDays": "[parameters('messageRetentionInDays')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}/{2}', format('{0}-ehns', parameters('baseName')), 'traces', 'cloud-forwarder')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces/eventhubs', format('{0}-ehns', parameters('baseName')), 'traces')]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/authorizationRules",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}', format('{0}-ehns', parameters('baseName')), 'cloud-forwarder-listen')]",
+      "properties": {
+        "rights": [
+          "Listen"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.EventHub/namespaces/authorizationRules",
+      "apiVersion": "2024-01-01",
+      "name": "[format('{0}/{1}', format('{0}-ehns', parameters('baseName')), 'cloud-forwarder-send')]",
+      "properties": {
+        "rights": [
+          "Send"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2023-09-01",
+      "name": "[format('{0}-logs', parameters('baseName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-env', parameters('baseName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('baseName'))), '2023-09-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('baseName'))), '2023-09-01').primarySharedKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('baseName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2024-03-01",
+      "name": "[format('{0}-app', parameters('baseName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-env', parameters('baseName')))]",
+        "configuration": {
+          "activeRevisionsMode": "Single",
+          "secrets": [
+            {
+              "name": "elasticsearch-api-key",
+              "value": "[parameters('elasticsearchApiKey')]"
+            },
+            {
+              "name": "eventhub-connection-string",
+              "value": "[listKeys(resourceId('Microsoft.EventHub/namespaces/authorizationRules', format('{0}-ehns', parameters('baseName')), 'cloud-forwarder-listen'), '2024-01-01').primaryConnectionString]"
+            }
+          ]
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "otelcol",
+              "image": "[parameters('containerImage')]",
+              "resources": {
+                "cpu": "[json('0.5')]",
+                "memory": "1Gi"
+              },
+              "env": [
+                {
+                  "name": "EVENTHUB_NAMESPACE",
+                  "value": "[format('{0}.servicebus.windows.net', format('{0}-ehns', parameters('baseName')))]"
+                },
+                {
+                  "name": "EVENTHUB_LOGS_NAME",
+                  "value": "logs"
+                },
+                {
+                  "name": "EVENTHUB_METRICS_NAME",
+                  "value": "metrics"
+                },
+                {
+                  "name": "EVENTHUB_TRACES_NAME",
+                  "value": "traces"
+                },
+                {
+                  "name": "EVENTHUB_CONSUMER_GROUP",
+                  "value": "cloud-forwarder"
+                },
+                {
+                  "name": "EVENTHUB_CONNECTION_STRING",
+                  "secretRef": "eventhub-connection-string"
+                },
+                {
+                  "name": "ELASTICSEARCH_OTLP_ENDPOINT",
+                  "value": "[parameters('elasticsearchOtlpEndpoint')]"
+                },
+                {
+                  "name": "ELASTICSEARCH_API_KEY",
+                  "secretRef": "elasticsearch-api-key"
+                }
+              ]
+            }
+          ],
+          "scale": {
+            "minReplicas": "[parameters('minReplicas')]",
+            "maxReplicas": "[parameters('maxReplicas')]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-env', parameters('baseName')))]",
+        "[resourceId('Microsoft.EventHub/namespaces', format('{0}-ehns', parameters('baseName')))]",
+        "[resourceId('Microsoft.EventHub/namespaces/authorizationRules', format('{0}-ehns', parameters('baseName')), 'cloud-forwarder-listen')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "containerAppName": {
+      "type": "string",
+      "value": "[format('{0}-app', parameters('baseName'))]"
+    },
+    "eventHubNamespaceName": {
+      "type": "string",
+      "value": "[format('{0}-ehns', parameters('baseName'))]"
+    },
+    "sendConnectionString": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.EventHub/namespaces/authorizationRules', format('{0}-ehns', parameters('baseName')), 'cloud-forwarder-send'), '2024-01-01').primaryConnectionString]"
+    }
+  }
+}

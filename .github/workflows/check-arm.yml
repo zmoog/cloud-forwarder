@@ -1,0 +1,31 @@
+name: Check ARM template is up-to-date
+
+on:
+  push:
+    paths:
+      - infra/main.bicep
+      - infra/main.json
+  pull_request:
+    paths:
+      - infra/main.bicep
+      - infra/main.json
+
+jobs:
+  check-arm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bicep
+        run: az bicep install
+
+      - name: Rebuild ARM template
+        run: az bicep build --file infra/main.bicep --outfile infra/main.json
+
+      - name: Fail if main.json is stale
+        run: |
+          if ! git diff --exit-code infra/main.json; then
+            echo "infra/main.json is out of sync with infra/main.bicep."
+            echo "Run 'make arm' locally and commit the updated main.json."
+            exit 1
+          fi

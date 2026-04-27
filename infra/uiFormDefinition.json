@@ -1,0 +1,158 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+  "view": {
+    "kind": "Form",
+    "properties": {
+      "title": "Cloud Forwarder ACA",
+      "steps": [
+        {
+          "name": "basics",
+          "label": "Essentials",
+          "elements": [
+            {
+              "name": "resourceScope",
+              "type": "Microsoft.Common.ResourceScope",
+              "location": {
+                "resourceTypes": [
+                  "microsoft.resources/resourcegroups"
+                ]
+              }
+            },
+            {
+              "name": "otlpEndpoint",
+              "type": "Microsoft.Common.TextBox",
+              "label": "OTLP Endpoint",
+              "toolTip": "OTLP endpoint to send telemetry data to.",
+              "placeholder": "Example: https://my-deployment-abc123.ingest.us-east-1.aws.elastic-cloud.com:443",
+              "constraints": {
+                "required": true,
+                "regex": "^https?://[^/\\s]+:\\d+$",
+                "validationMessage": "Enter a valid OTLP endpoint URL including the port number (e.g. https://host:443)."
+              }
+            },
+            {
+              "name": "elasticApiKey",
+              "type": "Microsoft.Common.PasswordBox",
+              "label": {
+                "password": "Elasticsearch API Key"
+              },
+              "toolTip": "API key used to authenticate with the OTLP endpoint.",
+              "constraints": {
+                "required": true
+              },
+              "options": {
+                "hideConfirmation": true
+              }
+            },
+            {
+              "name": "containerImage",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Container Image",
+              "defaultValue": "mauriziobranca626/cloud-forwarder-aca:dev",
+              "toolTip": "Docker image to deploy (e.g. mauriziobranca626/cloud-forwarder-aca:dev).",
+              "constraints": {
+                "required": true
+              }
+            },
+            {
+              "name": "eventHubSku",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Event Hub Namespace Tier",
+              "toolTip": "Tier of the Event Hub namespace. Kafka protocol requires Standard or above.",
+              "defaultValue": "Standard",
+              "constraints": {
+                "required": true,
+                "allowedValues": [
+                  {
+                    "label": "Standard",
+                    "value": "Standard"
+                  },
+                  {
+                    "label": "Premium",
+                    "value": "Premium"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "advanced",
+          "label": "Advanced settings",
+          "description": "Configure scaling and Event Hub settings for Cloud Forwarder ACA.",
+          "elements": [
+            {
+              "name": "scalingSection",
+              "type": "Microsoft.Common.Section",
+              "label": "Container App Scaling",
+              "elements": [
+                {
+                  "name": "minReplicas",
+                  "type": "Microsoft.Common.Slider",
+                  "label": "Minimum replicas",
+                  "toolTip": "Minimum number of running container replicas.",
+                  "min": 0,
+                  "max": 10,
+                  "defaultValue": 1,
+                  "showStepMarkers": false
+                },
+                {
+                  "name": "maxReplicas",
+                  "type": "Microsoft.Common.Slider",
+                  "label": "Maximum replicas",
+                  "toolTip": "Maximum number of running container replicas.",
+                  "min": 1,
+                  "max": 10,
+                  "defaultValue": 3,
+                  "showStepMarkers": false
+                }
+              ]
+            },
+            {
+              "name": "eventHubSection",
+              "type": "Microsoft.Common.Section",
+              "label": "Event Hub",
+              "elements": [
+                {
+                  "name": "partitionCount",
+                  "type": "Microsoft.Common.Slider",
+                  "label": "Partition count",
+                  "toolTip": "Number of partitions per Event Hub. Higher values allow more parallel consumers.",
+                  "min": 2,
+                  "max": 32,
+                  "defaultValue": 4,
+                  "showStepMarkers": false
+                },
+                {
+                  "name": "messageRetentionInDays",
+                  "type": "Microsoft.Common.Slider",
+                  "label": "Message retention (days)",
+                  "toolTip": "Number of days to retain Event Hub messages.",
+                  "min": 1,
+                  "max": 7,
+                  "defaultValue": 1,
+                  "showStepMarkers": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "parameters": {
+        "elasticsearchOtlpEndpoint": "[steps('basics').otlpEndpoint]",
+        "elasticsearchApiKey": "[steps('basics').elasticApiKey]",
+        "containerImage": "[steps('basics').containerImage]",
+        "eventHubSku": "[steps('basics').eventHubSku]",
+        "minReplicas": "[steps('advanced').scalingSection.minReplicas]",
+        "maxReplicas": "[steps('advanced').scalingSection.maxReplicas]",
+        "partitionCount": "[steps('advanced').eventHubSection.partitionCount]",
+        "messageRetentionInDays": "[steps('advanced').eventHubSection.messageRetentionInDays]"
+      },
+      "kind": "ResourceGroup",
+      "location": "[steps('basics').resourceScope.location.name]",
+      "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]"
+    }
+  }
+}

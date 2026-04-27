@@ -4,6 +4,8 @@ A prototype exploring an alternative deployment model for Cloud Forwarder
 for Azure, running the OpenTelemetry Collector on **Azure Container Apps
 (ACA)** instead of Azure Functions.
 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fzmoog%2Fcloud-forwarder%2Fmain%2Finfra%2Fmain.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fzmoog%2Fcloud-forwarder%2Fmain%2Finfra%2FuiFormDefinition.json)
+
 ## Architecture Overview
 
 ```

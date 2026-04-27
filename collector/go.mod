@@ -1,4 +1,4 @@
-module github.com/zmoog/research/azure/ecf-aca/collector
+module github.com/zmoog/cloud-forwarder/collector
 
 go 1.26.1
 

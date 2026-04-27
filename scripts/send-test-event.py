@@ -41,7 +41,7 @@ def main():
                 "category": "Administrative",
                 "resultType": "Success",
                 "properties": {
-                    "message": f"Test event from ECF-ACA prototype to {hub_name} hub",
+                    "message": f"Test event from Cloud Forwarder ACA to {hub_name} hub",
                 },
             }
         ]

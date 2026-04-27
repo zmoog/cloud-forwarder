@@ -2,7 +2,7 @@
 param location string = resourceGroup().location
 
 @description('Base name for all resources')
-param baseName string = 'ecf-aca'
+param baseName string = 'cloud-forwarder-aca'
 
 @description('Event Hub namespace SKU')
 @allowed(['Standard', 'Premium'])
@@ -53,7 +53,7 @@ resource logsHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 
 resource logsConsumerGroup 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2024-01-01' = {
   parent: logsHub
-  name: 'ecf'
+  name: 'cloud-forwarder'
 }
 
 resource metricsHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
@@ -67,7 +67,7 @@ resource metricsHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 
 resource metricsConsumerGroup 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2024-01-01' = {
   parent: metricsHub
-  name: 'ecf'
+  name: 'cloud-forwarder'
 }
 
 resource tracesHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
@@ -81,14 +81,14 @@ resource tracesHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
 
 resource tracesConsumerGroup 'Microsoft.EventHub/namespaces/eventhubs/consumergroups@2024-01-01' = {
   parent: tracesHub
-  name: 'ecf'
+  name: 'cloud-forwarder'
 }
 
 // Shared access policy with Listen permission for the Kafka consumer.
 // The connection string from this policy is used as the SASL password.
 resource listenRule 'Microsoft.EventHub/namespaces/authorizationRules@2024-01-01' = {
   parent: eventHubNamespace
-  name: 'ecf-listen'
+  name: 'cloud-forwarder-listen'
   properties: {
     rights: [
       'Listen'
@@ -99,7 +99,7 @@ resource listenRule 'Microsoft.EventHub/namespaces/authorizationRules@2024-01-01
 // Shared access policy with Send permission for testing (send test messages).
 resource sendRule 'Microsoft.EventHub/namespaces/authorizationRules@2024-01-01' = {
   parent: eventHubNamespace
-  name: 'ecf-send'
+  name: 'cloud-forwarder-send'
   properties: {
     rights: [
       'Send'
@@ -170,7 +170,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'EVENTHUB_LOGS_NAME', value: 'logs' }
             { name: 'EVENTHUB_METRICS_NAME', value: 'metrics' }
             { name: 'EVENTHUB_TRACES_NAME', value: 'traces' }
-            { name: 'EVENTHUB_CONSUMER_GROUP', value: 'ecf' }
+            { name: 'EVENTHUB_CONSUMER_GROUP', value: 'cloud-forwarder' }
             { name: 'EVENTHUB_CONNECTION_STRING', secretRef: 'eventhub-connection-string' }
             { name: 'ELASTICSEARCH_OTLP_ENDPOINT', value: elasticsearchOtlpEndpoint }
             { name: 'ELASTICSEARCH_API_KEY', secretRef: 'elasticsearch-api-key' }

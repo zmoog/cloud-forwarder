@@ -9,13 +9,13 @@ COPY collector/ ./collector/
 COPY config.yaml ./
 
 RUN cd collector && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -o /build/ecf-collector .
+    go build -o /build/collector .
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=builder /build/ecf-collector /ecf-collector
+COPY --from=builder /build/collector /collector
 COPY --from=builder /build/config.yaml /etc/otelcol/config.yaml
 
 USER nonroot:nonroot
-ENTRYPOINT ["/ecf-collector"]
+ENTRYPOINT ["/collector"]
 CMD ["--config", "/etc/otelcol/config.yaml"]

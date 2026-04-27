@@ -1,7 +1,7 @@
-# ECF-ACA: EDOT Cloud Forwarder on Azure Container Apps
+# Cloud Forwarder ACA
 
-A prototype exploring an alternative deployment model for EDOT Cloud Forwarder
-(ECF) for Azure, running the OpenTelemetry Collector on **Azure Container Apps
+A prototype exploring an alternative deployment model for Cloud Forwarder
+for Azure, running the OpenTelemetry Collector on **Azure Container Apps
 (ACA)** instead of Azure Functions.
 
 ## Architecture Overview
@@ -44,15 +44,15 @@ contrib `kafkareceiver` instead of the `azureeventhubreceiver` because:
 1. **Encoding extension support**: The Kafka receiver supports pluggable encoding
    extensions. This lets us use `azureencodingextension` and `beatsencodingextension`
    to decode Event Hub messages — the same encodings used by the Azure Functions
-   based ECF.
+   based Cloud Forwarder.
 2. **The Event Hub receiver does not support encoding extensions**: It has a
    hardcoded `format` field (`azure`, `raw`) with no extension hook.
 3. **Kafka consumer group protocol**: Partition assignment and offset tracking are
    handled by the Kafka protocol itself — no separate blob checkpoint store needed.
 
-### Key Differences from ECF Azure Functions
+### Key Differences from Cloud Forwarder Azure Functions
 
-| Aspect | ECF (Azure Functions) | ECF-ACA (Container Apps) |
+| Aspect | Cloud Forwarder (Azure Functions) | Cloud Forwarder ACA (Container Apps) |
 |--------|----------------------|--------------------------|
 | **Compute** | Azure Functions (Flex Consumption) | Azure Container Apps |
 | **Scaling** | Event-driven (per-event) | Container-level (min/max replicas) |
@@ -67,7 +67,7 @@ contrib `kafkareceiver` instead of the `azureeventhubreceiver` because:
 ## Project Structure
 
 ```
-ecf-aca/
+cloud-forwarder-aca/
 ├── README.md              # This file
 ├── Makefile               # Build and deploy commands
 ├── Dockerfile             # Container image build
@@ -130,7 +130,7 @@ The collector is configured via environment variables:
 | `EVENTHUB_LOGS_NAME` | Event Hub name for logs (default: `logs`) | No |
 | `EVENTHUB_METRICS_NAME` | Event Hub name for metrics (default: `metrics`) | No |
 | `EVENTHUB_TRACES_NAME` | Event Hub name for traces (default: `traces`) | No |
-| `EVENTHUB_CONSUMER_GROUP` | Kafka consumer group ID (default: `ecf`) | No |
+| `EVENTHUB_CONSUMER_GROUP` | Kafka consumer group ID (default: `cloud-forwarder`) | No |
 | `LOGS_ENCODING` | Encoding for logs (default: `azure_encoding`) | No |
 | `METRICS_ENCODING` | Encoding for metrics (default: `azure_encoding`) | No |
 | `TRACES_ENCODING` | Encoding for traces (default: `azure_encoding`) | No |
@@ -153,8 +153,8 @@ The encoding can be switched per-pipeline via environment variables:
 The Bicep template (`infra/main.bicep`) deploys:
 
 - **Event Hub Namespace** (Standard SKU with Kafka enabled) with `logs`, `metrics`,
-  and `traces` hubs, each with an `ecf` consumer group
-- **Shared Access Policy** (`ecf-listen`) with Listen rights — the connection string
+  and `traces` hubs, each with a `cloud-forwarder` consumer group
+- **Shared Access Policy** (`cloud-forwarder-listen`) with Listen rights — the connection string
   is used as the SASL/PLAIN password for the Kafka receiver
 - **Container Apps Environment** with Log Analytics workspace
 - **Container App** running the public collector image from Docker Hub with all env

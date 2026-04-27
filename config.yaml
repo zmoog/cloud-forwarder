@@ -6,7 +6,7 @@ receivers:
       topics:
         - ${env:EVENTHUB_LOGS_NAME:-logs}
       encoding: ${env:LOGS_ENCODING:-azure_encoding}
-    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-ecf}
+    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-cloud-forwarder}
     initial_offset: earliest
     use_leader_epoch: false
     auth:
@@ -23,7 +23,7 @@ receivers:
       topics:
         - ${env:EVENTHUB_METRICS_NAME:-metrics}
       encoding: ${env:METRICS_ENCODING:-azure_encoding}
-    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-ecf}
+    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-cloud-forwarder}
     initial_offset: earliest
     use_leader_epoch: false
     auth:
@@ -40,7 +40,7 @@ receivers:
       topics:
         - ${env:EVENTHUB_TRACES_NAME:-traces}
       encoding: ${env:TRACES_ENCODING:-azure_encoding}
-    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-ecf}
+    group_id: ${env:EVENTHUB_CONSUMER_GROUP:-cloud-forwarder}
     initial_offset: earliest
     use_leader_epoch: false
     auth:

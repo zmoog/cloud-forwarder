@@ -13,7 +13,7 @@ import (
 func main() {
 	info := component.BuildInfo{
 		Command:     "cloud-forwarder-aca",
-		Description: "EDOT Cloud Forwarder for Azure (ACA)",
+		Description: "Cloud Forwarder ACA",
 		Version:     "0.1.0",
 	}
 
